@@ -1,0 +1,39 @@
+//
+// -----------------------------------------
+// Original project: Asteroids
+// Original package: Asteroids
+// Created on: 28/10/2025 by: Steven Barnett
+// Web: http://www.sabarnett.co.uk
+// GitHub: https://www.github.com/sabarnett
+// -----------------------------------------
+// Copyright © 2025 Steven Barnett. All rights reserved.
+//
+
+import SpriteKit
+import SwiftUI
+
+struct ContentView: View {
+    @StateObject private var sceneDataModel: SceneDataModel = .init()
+
+    var body: some View {
+        gameSceneView()
+            .onChange(of: sceneDataModel.pauseGame) {
+                print("Pause changed to \(sceneDataModel.pauseGame)")
+            }
+    }
+
+    private func gameSceneView() -> some View {
+        if let scene = SKScene(fileNamed: "GameScene") as? GameScene {
+            scene.scaleMode = .aspectFill
+            scene.dataModel = sceneDataModel
+            return SpriteView(scene: scene)
+                .ignoresSafeArea()
+        }
+        return SpriteView(scene: SKScene())
+            .ignoresSafeArea()
+    }
+}
+
+#Preview {
+    ContentView()
+}
