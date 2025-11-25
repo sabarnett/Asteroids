@@ -45,7 +45,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         physicsWorld.contactDelegate = self
 
-        dashboard.position = CGPoint(x: -440, y: 300)
+        dashboard.position = CGPoint(x: -490, y: 300)
         dashboard.zPosition = 2
         addChild(dashboard)
 
