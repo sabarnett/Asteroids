@@ -21,10 +21,9 @@ class DashboardNode: SKNode {
         super.init()
 
         let background = SKSpriteNode(imageNamed: "dashboard.png")
-        background.scale(to: CGSize(width: 360, height: 40))
         background.anchorPoint = .zero
         background.zPosition = -1
-        background.position = CGPoint(x: 0, y: -12)
+        background.position = CGPoint(x: 0, y: -15)
         addChild(background)
         
         setupFuelGauge()
@@ -54,26 +53,30 @@ class DashboardNode: SKNode {
 //    }
 
     private func setupFuelGauge() {
-        fuelLabel.position = CGPoint(x: 25, y: 0)
-        fuelLabel.fontSize = 22.0
+        fuelLabel.position = CGPoint(x: 25, y: 6)
+        fuelLabel.fontSize = 20.0
         fuelLabel.horizontalAlignmentMode = .left
+        fuelLabel.fontColor = .black
         addChild(fuelLabel)
         fuelRemaining = 100.0
     }
 
     private func setupTimeLabel() {
-        timeLabel.position = CGPoint(x: 145, y: 0)
-        timeLabel.fontSize = 22.0
+        timeLabel.position = CGPoint(x: 145, y: 6)
+        timeLabel.fontSize = 20.0
         timeLabel.horizontalAlignmentMode = .left
+        timeLabel.fontColor = .black
         addChild(timeLabel)
         timeElapsed = 0
     }
 
     private func setupScoreLabel() {
-        scoreLabel.position = CGPoint(x: 305, y: 0)
-        scoreLabel.fontSize = 22.0
+        scoreLabel.position = CGPoint(x: 305, y: 6)
+        scoreLabel.fontSize = 20.0
         scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.fontColor = .black
         addChild(scoreLabel)
         score = 0
     }
 }
+
