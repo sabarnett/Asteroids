@@ -29,6 +29,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var touchingPlayer = false
     var gameTimer: Timer?
     var gameLoaded = false
+    var popup: HighScoresPopup?
 
     override func didMove(to view: SKView) {
         createBackgroundImageAndMusic()
@@ -224,6 +225,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func showGameOver() {
+        if self.gameOver { return }
+
+        self.gameOver = true
+        gameTimer?.invalidate()
+
         let sound = SKAction.playSoundFileNamed("explosion.wav", waitForCompletion: false)
         run(sound)
 
@@ -242,8 +248,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         music.removeFromParent()
         player.removeFromParent()
 
-        self.gameOver = true
-        gameTimer?.invalidate()
+        // Example scores
+        let scores = [1000, 800, 700, 500, 200]
+
+        if popup == nil {
+            popup = HighScoresPopup(scores: scores) {
+                self.popup!.removeFromParent()
+                self.popup = nil
+            }
+            popup!.position = CGPoint(x: 0, y: 0)
+            popup!.zPosition = 9999
+
+            addChild(popup!)
+            popup!.show()
+        }
     }
 
     private func useFuel() -> Bool {
@@ -285,9 +303,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func newGame() {
         if let scene = GameScene(fileNamed: "GameScene") {
+            scene.popup = nil
             scene.dataModel = dataModel
             scene.scaleMode = .aspectFill
             self.view?.presentScene(scene)
         }
     }
 }
+
