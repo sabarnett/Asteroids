@@ -19,11 +19,7 @@ class HighScoresPopup: SKNode {
 
     private let panelSize = CGSize(width: 620, height: 580)
 
-    var onHide: () -> Void
-
-    init(scores: [Int], onHide: @escaping () -> Void = {}) {
-        self.onHide = onHide
-
+    init(scores: [Int]) {
         // Dim background
         background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.55),
                                   size: CGSize(width: 4000, height: 4000))
@@ -118,7 +114,6 @@ class HighScoresPopup: SKNode {
 
         if node.name == "closeButton" {
             hide()
-            onHide()
         }
     }
 }

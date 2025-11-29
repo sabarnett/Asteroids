@@ -251,17 +251,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Example scores
         let scores = [1000, 800, 700, 500, 200]
 
-        if popup == nil {
-            popup = HighScoresPopup(scores: scores) {
-                self.popup!.removeFromParent()
-                self.popup = nil
-            }
-            popup!.position = CGPoint(x: 0, y: 0)
-            popup!.zPosition = 9999
+        popup = HighScoresPopup(scores: scores)
+        popup!.position = CGPoint(x: 0, y: 0)
+        popup!.zPosition = 9999
 
-            addChild(popup!)
-            popup!.show()
-        }
+        addChild(popup!)
+        popup!.show()
     }
 
     private func useFuel() -> Bool {
@@ -303,7 +298,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func newGame() {
         if let scene = GameScene(fileNamed: "GameScene") {
-            scene.popup = nil
             scene.dataModel = dataModel
             scene.scaleMode = .aspectFill
             self.view?.presentScene(scene)
