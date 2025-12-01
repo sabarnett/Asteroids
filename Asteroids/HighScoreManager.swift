@@ -24,12 +24,7 @@ class HighScoreManager {
     private(set) var scoreAdded: Bool = false
 
     var scores: [HighScore] {
-        highScores.sorted(by: {
-            if $0.score == $1.score {
-                return $0.time > $1.time
-            }
-            return $0.score > $1.score
-        })
+        sortedHighScores()
     }
 
     init() {
@@ -51,13 +46,7 @@ class HighScoreManager {
 
         // We must have 6 scores now, so is this new one greater
         // than the lowest existing score.
-        let sortedList = highScores.sorted(by:
-        {
-            if $0.score == $1.score {
-                return $0.time > $1.time
-            }
-            return $0.score > $1.score }
-        )
+        let sortedList = sortedHighScores()
         let lowest = sortedList.last!
         highScores.removeAll(where: {$0.id == lowest.id })
 
@@ -98,5 +87,14 @@ class HighScoreManager {
     private func fileUrl(file: String) -> URL {
         let fileName = file + ".save"
         return URL.documentsDirectory.appendingPathComponent(fileName)
+    }
+
+    private func sortedHighScores() -> [HighScore] {
+        highScores.sorted(by: {
+            if $0.score == $1.score {
+                return $0.time > $1.time
+            }
+            return $0.score > $1.score
+        })
     }
 }

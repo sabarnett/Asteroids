@@ -62,16 +62,16 @@ class HighScoresPopup: SKNode {
         for (i, score) in scores.enumerated() {
             if score.score == latestScore && latestShown == false {
                 latestShown = true
-                fontSize = 40
+                fontSize = 38
             } else {
-                fontSize = 32
+                fontSize = 30
             }
             let label = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
             label.fontSize = fontSize
-            label.fontColor = .darkGray
+            label.fontColor = .black
             label.horizontalAlignmentMode = .left
 
-            label.text = "\(score.score) in \(score.time.stringFormatted())"
+            label.text = "Score: \(score.score) in \(score.time.minutes()) mins and \(score.time.seconds()) secs"
 
             label.position = CGPoint(x: -panelSize.width/2 + 70,
                                      y: startY - CGFloat(i) * spacing)
