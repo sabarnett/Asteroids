@@ -25,6 +25,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     let music = SKAudioNode(fileNamed: "cyborg-ninja.mp3")
 
+    let highScores = HighScoreManager()
+
     var gameOver = false
     var touchingPlayer = false
     var gameTimer: Timer?
@@ -34,21 +36,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         createBackgroundImageAndMusic()
         createStarScape()
+        createToolbar()
+        initialiseDashboard()
         placePlayer()
 
-        playPause.position = CGPoint(x: 480, y: 320)
-        playPause.name = "PlayPause"
-        addChild(playPause)
-
-        playSound.position = CGPoint(x: 420, y: 320)
-        playSound.name = "PlaySound"
-        addChild(playSound)
-
         physicsWorld.contactDelegate = self
-
-        dashboard.position = CGPoint(x: -490, y: 300)
-        dashboard.zPosition = 2
-        addChild(dashboard)
 
         gameTimer = Timer.scheduledTimer(timeInterval: 0.35,
                                          target: self,
@@ -248,15 +240,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         music.removeFromParent()
         player.removeFromParent()
 
-        // Example scores
-        let scores = [1000, 800, 700, 500, 200]
+        highScores.add(score: dashboard.score, inTime: dashboard.timeElapsed)
+        if highScores.scoreAdded {
+            popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score)
+            popup!.position = CGPoint(x: 0, y: 0)
+            popup!.zPosition = 9999
 
-        popup = HighScoresPopup(scores: scores)
-        popup!.position = CGPoint(x: 0, y: 0)
-        popup!.zPosition = 9999
-
-        addChild(popup!)
-        popup!.show()
+            addChild(popup!)
+            popup!.show()
+        }
     }
 
     private func useFuel() -> Bool {
@@ -286,6 +278,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             particles.position.x = 512
             addChild(particles)
         }
+    }
+
+    private func createToolbar() {
+        playPause.position = CGPoint(x: 480, y: 320)
+        playPause.name = "PlayPause"
+        addChild(playPause)
+
+        playSound.position = CGPoint(x: 420, y: 320)
+        playSound.name = "PlaySound"
+        addChild(playSound)
+    }
+
+    private func initialiseDashboard() {
+        dashboard.position = CGPoint(x: -490, y: 300)
+        dashboard.zPosition = 2
+        addChild(dashboard)
     }
 
     private func placePlayer() {

@@ -19,22 +19,22 @@ class HighScoresPopup: SKNode {
 
     private let panelSize = CGSize(width: 620, height: 580)
 
-    init(scores: [Int]) {
+    init(scores: [HighScore], latestScore: Int) {
         // Dim background
         background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.55),
                                   size: CGSize(width: 4000, height: 4000))
         background.zPosition = 0
         
         // Panel window
-        panel = SKSpriteNode(color: UIColor.white, size: panelSize)
+        panel = SKSpriteNode(imageNamed: "highScores")
         panel.zPosition = 1
         panel.setScale(0.01) // start small for animation
         
         // Close button
         closeButton = SKSpriteNode(imageNamed: "close")
         closeButton.name = "closeButton"
-        closeButton.position = CGPoint(x: panelSize.width/2 - 35,
-                                       y: panelSize.height/2 - 35)
+        closeButton.position = CGPoint(x: panelSize.width/2 - 45,
+                                       y: panelSize.height/2 - 55)
         closeButton.zPosition = 2
 
         super.init()
@@ -46,36 +46,34 @@ class HighScoresPopup: SKNode {
         panel.addChild(closeButton)
 
         // Build UI
-        createTitle()
-        createScoreList(scores)
+        createScoreList(scores, latestScore: latestScore)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
     // MARK: - UI Construction
 
-    private func createTitle() {
-        let label = SKLabelNode(fontNamed: "Helvetica-Bold")
-        label.text = "High Scores"
-        label.fontSize = 44
-        label.fontColor = .black
-        label.position = CGPoint(x: 0, y: panelSize.height/2 - 90)
-        panel.addChild(label)
-    }
-
-    private func createScoreList(_ scores: [Int]) {
-        let startY: CGFloat = panelSize.height/2 - 150
-        let spacing: CGFloat = 40
+    private func createScoreList(_ scores: [HighScore], latestScore: Int) {
+        var latestShown = false
+        var fontSize = 32.0
+        let startY: CGFloat = panelSize.height/2 - 200
+        let spacing: CGFloat = 60
         
         for (i, score) in scores.enumerated() {
-            let label = SKLabelNode(fontNamed: "Helvetica")
-            label.fontSize = 32
+            if score.score == latestScore && latestShown == false {
+                latestShown = true
+                fontSize = 40
+            } else {
+                fontSize = 32
+            }
+            let label = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+            label.fontSize = fontSize
             label.fontColor = .darkGray
             label.horizontalAlignmentMode = .left
 
-            label.text = "\(i+1).  \(score)"
-            
-            label.position = CGPoint(x: -panelSize.width/2 + 40,
+            label.text = "\(score.score) in \(score.time.stringFormatted())"
+
+            label.position = CGPoint(x: -panelSize.width/2 + 70,
                                      y: startY - CGFloat(i) * spacing)
 
             panel.addChild(label)
