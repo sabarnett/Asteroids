@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "slice2.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "closeButton@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

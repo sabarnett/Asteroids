@@ -20,14 +20,12 @@ extension TimeInterval {
     }
     func minutes() -> String {
         let interval = Int(self)
-        let seconds = interval % 60
         let minutes = (interval / 60) % 60
         return String(format: "%02d", minutes)
     }
     func seconds() -> String {
         let interval = Int(self)
         let seconds = interval % 60
-        let minutes = (interval / 60) % 60
         return String(format: "%02d", seconds)
     }
 }

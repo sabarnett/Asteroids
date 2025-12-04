@@ -15,10 +15,14 @@ import SwiftUI
 @objcMembers
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
+    var gameNode = SKNode()
+    var popupNode = SKNode()
+
     var dataModel: SceneDataModel!
 
     let playPause = SKSpriteNode(imageNamed: "pauseButton")
-    let playSound = SKSpriteNode(imageNamed: "soundOffButton")
+    let playSound = SKSpriteNode(imageNamed: "soundOff")
+    let leaderBoard = SKSpriteNode(imageNamed: "leaderBoard")
 
     let player = SKSpriteNode(imageNamed: "player-rocket.png")
     let dashboard = DashboardNode()
@@ -34,6 +38,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var popup: HighScoresPopup?
 
     override func didMove(to view: SKView) {
+        addChild(gameNode)
+        addChild(popupNode)
+
         createBackgroundImageAndMusic()
         createStarScape()
         createToolbar()
@@ -60,21 +67,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             touchingPlayer = true
         } else if let _ = tappedNodes.first(where: { $0.name == "gameOver"}) {
             newGame()
-        } else if let ppNode = tappedNodes.first(where: {$0.name == "PlayPause"}) {
-            isPaused.toggle()
-
-            let ppNode2 = ppNode as! SKSpriteNode
-            ppNode2.texture = isPaused
-                ? SKTexture(imageNamed: "playButton")
-                : SKTexture(imageNamed: "pauseButton")
+        } else if let _ = tappedNodes.first(where: {$0.name == "PlayPause"}) {
+            togglePlayPause()
+        } else if let _ = tappedNodes.first(where: {$0.name == "LeaderBoard"} ) {
+            showLeaderBoard()
         } else if let muNode = tappedNodes.first(where: { $0.name == "PlaySound"}) {
             let muNode2 = muNode as! SKSpriteNode
             if music.parent == nil {
                 addChild(music)
-                muNode2.texture = SKTexture(imageNamed: "soundOffButton")
+                muNode2.texture = SKTexture(imageNamed: "soundOff")
             } else {
                 music.removeFromParent()
-                muNode2.texture = SKTexture(imageNamed: "soundOnButton")
+                muNode2.texture = SKTexture(imageNamed: "soundOn")
             }
         }
     }
@@ -96,6 +100,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(_ currentTime: TimeInterval) {
         // this method is called before each frame is rendered
         if gameOver { return }
+        if popup != nil { return }
 
         for node in children {
             if node.position.x < -700 {
@@ -110,7 +115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func createEnemy() {
-        if isPaused { return }
+        if gameNode.isPaused { return }
 
         guard useFuel() else { return }
 
@@ -139,7 +144,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 )
             ]))
 
-            addChild(sprite)
+            gameNode.addChild(sprite)
 
             dashboard.timeElapsed += 0.35
         }
@@ -180,7 +185,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             )
         ]))
 
-        addChild(sprite)
+        gameNode.addChild(sprite)
     }
 
     func didBegin(_ contact: SKPhysicsContact) {
@@ -211,7 +216,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let particles = SKEmitterNode(fileNamed: "Explosion") {
             particles.position = node.position
             particles.zPosition = 3
-            addChild(particles)
+            gameNode.addChild(particles)
         }
         showGameOver()
     }
@@ -228,25 +233,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let gameOver = SKSpriteNode(imageNamed: "gameOver-2")
         gameOver.zPosition = 10
         gameOver.name = "gameOver"
-        addChild(gameOver)
+        gameNode.addChild(gameOver)
 
         let playAgain = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
         playAgain.text = "Tap to play again"
         playAgain.position = CGPoint(x: gameOver.position.x, y: gameOver.position.y - 120)
         playAgain.zPosition = 10
         playAgain.name = "gameOver"
-        addChild(playAgain)
+        gameNode.addChild(playAgain)
 
         music.removeFromParent()
         player.removeFromParent()
 
         highScores.add(score: dashboard.score, inTime: dashboard.timeElapsed)
         if highScores.scoreAdded {
-            popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score)
+            popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score) {
+                // It closed!
+                self.popup = nil
+            }
             popup!.position = CGPoint(x: 0, y: 0)
             popup!.zPosition = 9999
 
-            addChild(popup!)
+            popupNode.addChild(popup!)
             popup!.show()
         }
     }
@@ -265,7 +273,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func createBackgroundImageAndMusic() {
         let background = SKSpriteNode(imageNamed: "space.jpg")
         background.zPosition = -1
-        addChild(background)
+        gameNode.addChild(background)
 
         addChild(music)
     }
@@ -276,24 +284,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let particles = SKEmitterNode(fileNamed: "SpaceDust") {
             particles.advanceSimulationTime(10)
             particles.position.x = 512
-            addChild(particles)
+            gameNode.addChild(particles)
         }
     }
 
     private func createToolbar() {
         playPause.position = CGPoint(x: 480, y: 320)
         playPause.name = "PlayPause"
-        addChild(playPause)
+        gameNode.addChild(playPause)
 
         playSound.position = CGPoint(x: 420, y: 320)
         playSound.name = "PlaySound"
-        addChild(playSound)
+        gameNode.addChild(playSound)
+
+        leaderBoard.position = CGPoint(x: 360, y: 320)
+        leaderBoard.name = "LeaderBoard"
+        gameNode.addChild(leaderBoard)
     }
 
     private func initialiseDashboard() {
         dashboard.position = CGPoint(x: -490, y: 300)
         dashboard.zPosition = 2
-        addChild(dashboard)
+        gameNode.addChild(dashboard)
     }
 
     private func placePlayer() {
@@ -301,7 +313,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.zPosition = 1
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         player.physicsBody?.categoryBitMask = 1
-        addChild(player)
+        gameNode.addChild(player)
     }
 
     private func newGame() {
@@ -311,5 +323,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.view?.presentScene(scene)
         }
     }
-}
 
+    private func togglePlayPause() {
+
+        guard let playPauseButtonNode = gameNode.children.first(where: {$0.name == "PlayPause"}) as? SKSpriteNode else { return }
+
+        if gameNode.isPaused {
+            playPauseButtonNode.texture = SKTexture(imageNamed: "pauseButton")
+
+            gameNode.speed = 1
+            self.physicsWorld.speed = 1
+
+            addChild(music)
+            gameNode.isPaused = false
+        } else {
+            playPauseButtonNode.texture = SKTexture(imageNamed: "playButton")
+
+            gameNode.speed = 0
+            self.physicsWorld.speed = 0
+
+            music.removeFromParent()
+            gameNode.isPaused = true
+        }
+    }
+
+    private func showLeaderBoard() {
+        let gamePaused = gameNode.isPaused
+
+        // Pause the game if it isn't already paused.
+        if !gamePaused {
+            togglePlayPause()
+        }
+
+        popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score) {
+            // OnClose - toggle the game back on
+            if !gamePaused {
+                self.togglePlayPause()
+            }
+            self.popup = nil
+        }
+        popup!.position = CGPoint(x: 0, y: 0)
+        popup!.zPosition = 9999
+
+        popupNode.addChild(popup!)
+        popup!.show()
+    }
+}

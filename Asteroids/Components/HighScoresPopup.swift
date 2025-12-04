@@ -13,13 +13,17 @@ import SpriteKit
 
 class HighScoresPopup: SKNode {
 
+    var onClose: () -> Void
+
     private let background: SKSpriteNode
     private let panel: SKSpriteNode
     private let closeButton: SKSpriteNode
 
     private let panelSize = CGSize(width: 620, height: 580)
 
-    init(scores: [HighScore], latestScore: Int) {
+    init(scores: [HighScore], latestScore: Int, onClose: @escaping () -> Void) {
+        self.onClose = onClose
+
         // Dim background
         background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.55),
                                   size: CGSize(width: 4000, height: 4000))
@@ -31,7 +35,7 @@ class HighScoresPopup: SKNode {
         panel.setScale(0.01) // start small for animation
         
         // Close button
-        closeButton = SKSpriteNode(imageNamed: "close")
+        closeButton = SKSpriteNode(imageNamed: "closeButton")
         closeButton.name = "closeButton"
         closeButton.position = CGPoint(x: panelSize.width/2 - 45,
                                        y: panelSize.height/2 - 55)
@@ -88,6 +92,7 @@ class HighScoresPopup: SKNode {
 
         let scaleUp = SKAction.scale(to: 1.0, duration: 0.28)
         scaleUp.timingMode = .easeOut
+
         panel.run(scaleUp)
     }
 
@@ -100,6 +105,7 @@ class HighScoresPopup: SKNode {
         
         panel.run(scaleDown) {
             completion()
+            self.onClose()
         }
     }
 
