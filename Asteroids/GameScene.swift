@@ -20,12 +20,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     var dataModel: SceneDataModel!
 
-    let playPause = SKSpriteNode(imageNamed: "pauseButton")
-    let playSound = SKSpriteNode(imageNamed: "soundOff")
-    let leaderBoard = SKSpriteNode(imageNamed: "leaderBoard")
-
     let player = SKSpriteNode(imageNamed: "player-rocket.png")
     let dashboard = DashboardNode()
+    let toolbar = ToolbarNode()
 
     let music = SKAudioNode(fileNamed: "cyborg-ninja.mp3")
 
@@ -67,19 +64,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             touchingPlayer = true
         } else if let _ = tappedNodes.first(where: { $0.name == "gameOver"}) {
             newGame()
-        } else if let _ = tappedNodes.first(where: {$0.name == "PlayPause"}) {
-            togglePlayPause()
-        } else if let _ = tappedNodes.first(where: {$0.name == "LeaderBoard"} ) {
-            showLeaderBoard()
-        } else if let muNode = tappedNodes.first(where: { $0.name == "PlaySound"}) {
-            let muNode2 = muNode as! SKSpriteNode
-            if music.parent == nil {
-                addChild(music)
-                muNode2.texture = SKTexture(imageNamed: "soundOff")
-            } else {
-                music.removeFromParent()
-                muNode2.texture = SKTexture(imageNamed: "soundOn")
-            }
         }
     }
 
@@ -203,15 +187,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if node.name == "bonus" {
             node.removeFromParent()
 
-            let sound = SKAction.playSoundFileNamed("bonus.wav", waitForCompletion: false)
-            run(sound)
+            if music.parent != nil {
+                let sound = SKAction.playSoundFileNamed("bonus.wav", waitForCompletion: false)
+                run(sound)
+            }
 
             dashboard.fuelRemaining = min(dashboard.fuelRemaining + 10, 100)
             dashboard.score += 1
 
             return
         }
-
 
         if let particles = SKEmitterNode(fileNamed: "Explosion") {
             particles.position = node.position
@@ -227,8 +212,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.gameOver = true
         gameTimer?.invalidate()
 
-        let sound = SKAction.playSoundFileNamed("explosion.wav", waitForCompletion: false)
-        run(sound)
+        if music.parent != nil {
+            let sound = SKAction.playSoundFileNamed("explosion.wav", waitForCompletion: false)
+            run(sound)
+        }
 
         let gameOver = SKSpriteNode(imageNamed: "gameOver-2")
         gameOver.zPosition = 10
@@ -275,6 +262,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         background.zPosition = -1
         gameNode.addChild(background)
 
+        music.name = "music"
         addChild(music)
     }
 
@@ -289,17 +277,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     private func createToolbar() {
-        playPause.position = CGPoint(x: 480, y: 320)
-        playPause.name = "PlayPause"
-        gameNode.addChild(playPause)
-
-        playSound.position = CGPoint(x: 420, y: 320)
-        playSound.name = "PlaySound"
-        gameNode.addChild(playSound)
-
-        leaderBoard.position = CGPoint(x: 360, y: 320)
-        leaderBoard.name = "LeaderBoard"
-        gameNode.addChild(leaderBoard)
+        toolbar.delegate = self
+        toolbar.position = CGPoint(x: 300, y: 310)
+        gameNode.addChild(toolbar)
     }
 
     private func initialiseDashboard() {
@@ -323,42 +303,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.view?.presentScene(scene)
         }
     }
+}
 
-    private func togglePlayPause() {
-
-        guard let playPauseButtonNode = gameNode.children.first(where: {$0.name == "PlayPause"}) as? SKSpriteNode else { return }
-
-        if gameNode.isPaused {
-            playPauseButtonNode.texture = SKTexture(imageNamed: "pauseButton")
-
-            gameNode.speed = 1
-            self.physicsWorld.speed = 1
-
-            addChild(music)
-            gameNode.isPaused = false
-        } else {
-            playPauseButtonNode.texture = SKTexture(imageNamed: "playButton")
-
-            gameNode.speed = 0
-            self.physicsWorld.speed = 0
-
-            music.removeFromParent()
-            gameNode.isPaused = true
-        }
-    }
-
-    private func showLeaderBoard() {
+extension GameScene: ToolbarDelegate {
+    func showLeaderBoard() {
         let gamePaused = gameNode.isPaused
 
         // Pause the game if it isn't already paused.
         if !gamePaused {
-            togglePlayPause()
+            playPause(isPaused: true)
         }
 
         popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score) {
             // OnClose - toggle the game back on
             if !gamePaused {
-                self.togglePlayPause()
+                self.playPause(isPaused: false)
             }
             self.popup = nil
         }
@@ -367,5 +326,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         popupNode.addChild(popup!)
         popup!.show()
+    }
+
+    func playPause(isPaused: Bool) {
+        if isPaused  == false {
+            gameNode.isPaused = false
+            gameNode.speed = 1
+            self.physicsWorld.speed = 1
+
+            if music.parent == nil {
+                addChild(music)
+            }
+        } else {
+            gameNode.isPaused = true
+            gameNode.speed = 0
+            self.physicsWorld.speed = 0
+
+            if music.parent != nil {
+                music.removeFromParent()
+            }
+        }
+    }
+
+    func playSound(turnOn: Bool) {
+        if turnOn {
+            addChild(music)
+        } else {
+            music.removeFromParent()
+        }
     }
 }
