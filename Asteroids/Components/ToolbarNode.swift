@@ -20,6 +20,14 @@ protocol ToolbarDelegate {
 class ToolbarNode: SKNode {
 
     var delegate: ToolbarDelegate?
+    var dataModel: SceneDataModel! {
+        didSet {
+            // Adjust icons
+            if dataModel.playingSound == false {
+                playSound.texture = SKTexture(imageNamed: "soundOn")
+            }
+        }
+    }
 
     let playPause = SKSpriteNode(imageNamed: "pauseButton")
     let playSound = SKSpriteNode(imageNamed: "soundOff")
@@ -66,14 +74,7 @@ class ToolbarNode: SKNode {
     }
 
     func togglePlayMusic() {
-        // The music node is in the paremnt of the game node. We are a
-        // child of the game node, so we need to go up two levels to
-        // detect the music node.
-        guard let parentNode = parent?.parent else {
-            return
-        }
-
-        if parentNode.children.first(where: {$0.name == "music"}) != nil {
+        if dataModel.playingSound {
             // Turn music off
             playSound.texture = SKTexture(imageNamed: "soundOn")
             delegate?.playSound(turnOn: false)
@@ -96,6 +97,5 @@ class ToolbarNode: SKNode {
             parent.isPaused = true
             delegate?.playPause(isPaused: true)
         }
-
     }
 }

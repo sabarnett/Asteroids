@@ -17,9 +17,6 @@ struct ContentView: View {
 
     var body: some View {
         gameSceneView()
-            .onChange(of: sceneDataModel.pauseGame) {
-                print("Pause changed to \(sceneDataModel.pauseGame)")
-            }
     }
 
     private func gameSceneView() -> some View {

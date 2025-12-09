@@ -26,13 +26,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     let music = SKAudioNode(fileNamed: "cyborg-ninja.mp3")
 
-    let highScores = HighScoreManager()
-
-    var gameOver = false
-    var touchingPlayer = false
     var gameTimer: Timer?
-    var gameLoaded = false
     var popup: HighScoresPopup?
+
+    // MARK: - SpriteKit handler overrides
 
     override func didMove(to view: SKView) {
         addChild(gameNode)
@@ -57,18 +54,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
 
-        // what nodes are at the location (background, possibly particles,
-        // possibly the player, possibly energy) We only want the player.
+        // The tappedNodes variable will create a collection of all the nodes at
+        // a specific place on the screen. Given the nature of the game, there may
+        // be more than one node at any given location. It is up to us to determine
+        // if the node we are interested in is at this location. You might have the
+        // rocket or an asteroid or an energy spot or any combination of them.
         let tappedNodes = nodes(at: location)
+
         if tappedNodes.contains(player) {
-            touchingPlayer = true
-        } else if let _ = tappedNodes.first(where: { $0.name == "gameOver"}) {
+            dataModel.touchingPlayer = true
+        } else if tappedNodes.first(where: { $0.name == "gameOver"}) != nil {
             newGame()
         }
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard touchingPlayer else { return }
+        guard dataModel.touchingPlayer else { return }
         guard let touch = touches.first else { return }
 
         // Move the player to the new location
@@ -77,29 +78,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // this method is called when the user stops touching the screen
-        touchingPlayer = false
+        dataModel.touchingPlayer = false
     }
 
     override func update(_ currentTime: TimeInterval) {
-        // this method is called before each frame is rendered
-        if gameOver { return }
+        if dataModel.gameOver { return }
         if popup != nil { return }
 
-        for node in children {
-            if node.position.x < -700 {
-                node.removeFromParent()
-            }
-        }
-
-        if player.position.x < -400 { player.position.x = -400 }
-        if player.position.x > 400 { player.position.x = 400 }
-        if player.position.y < -300 { player.position.y = -300 }
-        if player.position.y > 300 { player.position.y = 300 }
+        removeOffScreenNodes()
+        ensurePlayerRemainsOnScreen()
     }
 
+    // MARK: - Create asteroids and energy boosts
+
     func createEnemy() {
-        if gameNode.isPaused { return }
+        if dataModel.gamePaused { return }
 
         guard useFuel() else { return }
 
@@ -172,6 +165,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameNode.addChild(sprite)
     }
 
+    // MARK: - Handle collisions
+
     func didBegin(_ contact: SKPhysicsContact) {
         guard let nodeA = contact.bodyA.node else { return }
         guard let nodeB = contact.bodyB.node else { return }
@@ -184,19 +179,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func playerHit(_ node: SKNode) {
-        if node.name == "bonus" {
-            node.removeFromParent()
-
-            if music.parent != nil {
-                let sound = SKAction.playSoundFileNamed("bonus.wav", waitForCompletion: false)
-                run(sound)
-            }
-
-            dashboard.fuelRemaining = min(dashboard.fuelRemaining + 10, 100)
-            dashboard.score += 1
-
-            return
-        }
+        if bonusHit(node: node) { return }
 
         if let particles = SKEmitterNode(fileNamed: "Explosion") {
             particles.position = node.position
@@ -206,25 +189,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         showGameOver()
     }
 
-    func showGameOver() {
-        if self.gameOver { return }
+    func bonusHit(node: SKNode) -> Bool {
+        if node.name != "bonus" { return false }
 
-        self.gameOver = true
+        node.removeFromParent()
+
+        if dataModel.playingSound {
+            let sound = SKAction.playSoundFileNamed("bonus.wav", waitForCompletion: false)
+            run(sound)
+        }
+
+        dashboard.fuelRemaining = min(dashboard.fuelRemaining + 10, 100)
+        dashboard.score += 1
+
+        return true
+    }
+
+    // MARK: - Game over and game restart
+
+    func showGameOver() {
+        if dataModel.gameOver { return }
+
+        dataModel.gameOver = true
         gameTimer?.invalidate()
 
-        if music.parent != nil {
+        if dataModel.playingSound {
             let sound = SKAction.playSoundFileNamed("explosion.wav", waitForCompletion: false)
             run(sound)
         }
 
-        let gameOver = SKSpriteNode(imageNamed: "gameOver-2")
-        gameOver.zPosition = 10
-        gameOver.name = "gameOver"
-        gameNode.addChild(gameOver)
+        let gameOverPopup = SKSpriteNode(imageNamed: "gameOver-2")
+        gameOverPopup.zPosition = 10
+        gameOverPopup.name = "gameOver"
+        gameNode.addChild(gameOverPopup)
 
         let playAgain = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
         playAgain.text = "Tap to play again"
-        playAgain.position = CGPoint(x: gameOver.position.x, y: gameOver.position.y - 120)
+        playAgain.position = CGPoint(x: gameOverPopup.position.x, y: gameOverPopup.position.y - 120)
         playAgain.zPosition = 10
         playAgain.name = "gameOver"
         gameNode.addChild(playAgain)
@@ -232,9 +233,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         music.removeFromParent()
         player.removeFromParent()
 
-        highScores.add(score: dashboard.score, inTime: dashboard.timeElapsed)
-        if highScores.scoreAdded {
-            popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score) {
+        dataModel.highScores.add(score: dashboard.score, inTime: dashboard.timeElapsed)
+        if dataModel.highScores.scoreAdded {
+            popup = HighScoresPopup(scores: dataModel.highScores.scores, latestScore: dashboard.score) {
                 // It closed!
                 self.popup = nil
             }
@@ -244,6 +245,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             popupNode.addChild(popup!)
             popup!.show()
         }
+    }
+
+    private func newGame() {
+        if let scene = GameScene(fileNamed: "GameScene") {
+            dataModel.resetState()
+            scene.dataModel = dataModel
+            scene.scaleMode = .aspectFill
+            self.view?.presentScene(scene)
+        }
+    }
+
+    // MARK: - Game play helpers
+
+    private func removeOffScreenNodes() {
+        for node in children {
+            if node.position.x < -700 {
+                node.removeFromParent()
+            }
+        }
+    }
+
+    private func ensurePlayerRemainsOnScreen() {
+        if player.position.x < -400 { player.position.x = -400 }
+        if player.position.x > 400 { player.position.x = 400 }
+        if player.position.y < -300 { player.position.y = -300 }
+        if player.position.y > 300 { player.position.y = 300 }
     }
 
     private func useFuel() -> Bool {
@@ -257,13 +284,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return true
     }
 
+    // MARK: - Initialisation
+
     private func createBackgroundImageAndMusic() {
         let background = SKSpriteNode(imageNamed: "space.jpg")
         background.zPosition = -1
         gameNode.addChild(background)
 
         music.name = "music"
-        addChild(music)
+        if dataModel.playingSound {
+            addChild(music)
+        }
     }
 
     private func createStarScape() {
@@ -278,6 +309,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     private func createToolbar() {
         toolbar.delegate = self
+        toolbar.dataModel = self.dataModel
         toolbar.position = CGPoint(x: 390, y: 310)
         gameNode.addChild(toolbar)
     }
@@ -295,28 +327,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.categoryBitMask = 1
         gameNode.addChild(player)
     }
-
-    private func newGame() {
-        if let scene = GameScene(fileNamed: "GameScene") {
-            scene.dataModel = dataModel
-            scene.scaleMode = .aspectFill
-            self.view?.presentScene(scene)
-        }
-    }
 }
+
+// MARK: - Toolbar handling
 
 extension GameScene: ToolbarDelegate {
     func showLeaderBoard() {
-        let gamePaused = gameNode.isPaused
+        let wasPaused = dataModel.gamePaused
 
         // Pause the game if it isn't already paused.
-        if !gamePaused {
+        if !wasPaused {
             playPause(isPaused: true)
         }
 
-        popup = HighScoresPopup(scores: highScores.scores, latestScore: dashboard.score) {
+        popup = HighScoresPopup(scores: dataModel.highScores.scores, latestScore: dashboard.score) {
             // OnClose - toggle the game back on
-            if !gamePaused {
+            if !wasPaused {
                 self.playPause(isPaused: false)
             }
             self.popup = nil
@@ -330,20 +356,24 @@ extension GameScene: ToolbarDelegate {
 
     func playPause(isPaused: Bool) {
         if isPaused  == false {
+            dataModel.gamePaused = false
             gameNode.isPaused = false
             gameNode.speed = 1
             self.physicsWorld.speed = 1
 
-            if music.parent == nil {
+            if dataModel.playingSound == false {
                 addChild(music)
+                dataModel.playingSound = true
             }
         } else {
+            dataModel.gamePaused = true
             gameNode.isPaused = true
             gameNode.speed = 0
             self.physicsWorld.speed = 0
 
-            if music.parent != nil {
+            if dataModel.playingSound {
                 music.removeFromParent()
+                dataModel.playingSound = false
             }
         }
     }
@@ -351,8 +381,10 @@ extension GameScene: ToolbarDelegate {
     func playSound(turnOn: Bool) {
         if turnOn {
             addChild(music)
+            dataModel.playingSound = true
         } else {
             music.removeFromParent()
+            dataModel.playingSound = false
         }
     }
 }
