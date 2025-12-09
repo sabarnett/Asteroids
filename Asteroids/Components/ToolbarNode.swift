@@ -32,11 +32,11 @@ class ToolbarNode: SKNode {
         leaderBoard.name = "LeaderBoard"
         addChild(leaderBoard)
 
-        playPause.position = CGPoint(x: 55, y: 0)
+        playPause.position = CGPoint(x: 45, y: 0)
         playPause.name = "PlayPause"
         addChild(playPause)
 
-        playSound.position = CGPoint(x: 110, y: 0)
+        playSound.position = CGPoint(x: 90, y: 0)
         playSound.name = "PlaySound"
         addChild(playSound)
 
