@@ -138,6 +138,8 @@ class HighScoresPopup: SKNode {
         }
     }
 
+    // MARK: - UI Creation helpers
+    
     /// A background node that covers the entire screen and greys out the
     /// currently active game board.
     private func createBackground() {
@@ -172,83 +174,5 @@ class HighScoresPopup: SKNode {
         reset.position = CGPoint(x: 0,
                                  y: (-panelSize.height / 2) + 50)
         panel.addChild(reset)
-    }
-}
-
-class ScoreNode: SKNode {
-
-    var scoreLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-    var minuteLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-    var secondLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-
-    init(score: HighScore, isLatest: Bool = false) {
-        super.init()
-
-        if isLatest {
-            let bgNode = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 332, height: 40))
-            bgNode.fillColor = .orange
-            addChild(bgNode)
-        }
-
-        scoreLabel.fontSize = 30
-        scoreLabel.fontColor = .black
-        scoreLabel.horizontalAlignmentMode = .left
-        scoreLabel.position = CGPoint(x: 10, y: 10)
-        scoreLabel.text = score.score.formatted(.number.precision(.integerLength(0...4)))
-        addChild(scoreLabel)
-
-        minuteLabel.fontSize = 30
-        minuteLabel.fontColor = .black
-        minuteLabel.horizontalAlignmentMode = .left
-        minuteLabel.position = CGPoint(x: 210, y: 10)
-        minuteLabel.text = score.time.minutes()
-        addChild(minuteLabel)
-
-        secondLabel.fontSize = 30
-        secondLabel.fontColor = .black
-        secondLabel.horizontalAlignmentMode = .left
-        secondLabel.position = CGPoint(x: 290, y: 10)
-        secondLabel.text = score.time.seconds()
-        addChild(secondLabel)
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-class ScoreTitleNode: SKNode {
-
-    var scoreLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-    var minuteLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-    var secondLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-
-    override init() {
-        super.init()
-
-        scoreLabel.fontSize = 32
-        scoreLabel.fontColor = .black
-        scoreLabel.horizontalAlignmentMode = .left
-        scoreLabel.position = CGPoint(x: 10, y: 10)
-        scoreLabel.text = "Score"
-        addChild(scoreLabel)
-
-        minuteLabel.fontSize = 32
-        minuteLabel.fontColor = .black
-        minuteLabel.horizontalAlignmentMode = .left
-        minuteLabel.position = CGPoint(x: 220, y: 10)
-        minuteLabel.text = "Mins"
-        addChild(minuteLabel)
-
-        secondLabel.fontSize = 32
-        secondLabel.fontColor = .black
-        secondLabel.horizontalAlignmentMode = .left
-        secondLabel.position = CGPoint(x: 300, y: 10)
-        secondLabel.text = "Secs"
-        addChild(secondLabel)
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
