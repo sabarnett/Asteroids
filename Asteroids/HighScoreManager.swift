@@ -56,6 +56,11 @@ class HighScoreManager {
         }
     }
 
+    func reset() {
+        highScores = []
+        saveHighScores()
+    }
+
     /// Loads the high scores from the AsteroidsHighScores file in the users documents folder
     private func loadHighScores() {
         let loadFileUrl = fileUrl(file: saveFileName)

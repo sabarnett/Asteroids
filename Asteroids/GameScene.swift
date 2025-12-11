@@ -235,7 +235,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         dataModel.highScores.add(score: dashboard.score, inTime: dashboard.timeElapsed)
         if dataModel.highScores.scoreAdded {
-            popup = HighScoresPopup(scores: dataModel.highScores.scores, latestScore: dashboard.score) {
+            popup = HighScoresPopup(scores: dataModel.highScores, latestScore: dashboard.score) {
                 // It closed!
                 self.popup = nil
             }
@@ -340,7 +340,7 @@ extension GameScene: ToolbarDelegate {
             playPause(isPaused: true)
         }
 
-        popup = HighScoresPopup(scores: dataModel.highScores.scores, latestScore: dashboard.score) {
+        popup = HighScoresPopup(scores: dataModel.highScores, latestScore: dashboard.score) {
             // OnClose - toggle the game back on
             if !wasPaused {
                 self.playPause(isPaused: false)

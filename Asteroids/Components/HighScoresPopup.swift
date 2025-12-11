@@ -13,73 +13,81 @@ import SpriteKit
 
 class HighScoresPopup: SKNode {
 
+    private enum NodeNames: String {
+
+        case scoreLabel, closeButton, resetScores
+
+        var name: String {
+            switch self {
+            case .scoreLabel: return "ScoreLabel"
+            case .closeButton: return "CloseButton"
+            case .resetScores: return "ResetScores"
+            }
+        }
+    }
+
+    /// Called when the popup window is closed. This is used by the caller to reset the environment
     var onClose: () -> Void
+    var highScoreManager: HighScoreManager
 
-    private let background: SKSpriteNode
-    private let panel: SKSpriteNode
-    private let closeButton: SKSpriteNode
+    /// The label where the high scores will be displayed. It is a simple graphic
+    /// with a pre-formatted title.
+    private var panel: SKSpriteNode!
 
+    private var background: SKSpriteNode!
+
+    /// Matches the dize of the high scores panel. We use this to correctly position
+    /// anything  that we place on the panel.
     private let panelSize = CGSize(width: 620, height: 580)
 
-    init(scores: [HighScore], latestScore: Int, onClose: @escaping () -> Void) {
+    init(scores: HighScoreManager, latestScore: Int, onClose: @escaping () -> Void) {
         self.onClose = onClose
-
-        // Dim background
-        background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.55),
-                                  size: CGSize(width: 4000, height: 4000))
-        background.zPosition = 0
-        
-        // Panel window
-        panel = SKSpriteNode(imageNamed: "highScores")
-        panel.zPosition = 1
-        panel.setScale(0.01) // start small for animation
-        
-        // Close button
-        closeButton = SKSpriteNode(imageNamed: "closeButton")
-        closeButton.name = "closeButton"
-        closeButton.position = CGPoint(x: panelSize.width/2 - 45,
-                                       y: panelSize.height/2 - 55)
-        closeButton.zPosition = 2
+        self.highScoreManager = scores
 
         super.init()
-        
         isUserInteractionEnabled = true
 
-        addChild(background)
-        addChild(panel)
-        panel.addChild(closeButton)
-
-        // Build UI
-        createScoreList(scores, latestScore: latestScore)
+        createBackground()
+        createHighScoresPanel()
+        createCloseButton()
+        createResetButton()
+        createScoreList(scores.scores, latestScore: latestScore)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
-    // MARK: - UI Construction
+    // MARK: - High Scores list
 
+    /// Creates the list of scores, ordered by the score. If there are multiple scores with the
+    /// same value, we order them by the amount of time the player survived to achieve that
+    /// score (longest to shortest). The most recently added score, if known, is highlighted.
+    ///
+    /// - Parameters:
+    ///   - scores: The list of the five highest scores
+    ///   - latestScore: The last score added which we can use to highlight it.
     private func createScoreList(_ scores: [HighScore], latestScore: Int) {
         var latestShown = false
-        var fontSize = 32.0
+        var isLatest = false
         let startY: CGFloat = panelSize.height/2 - 200
-        let spacing: CGFloat = 60
-        
+        let spacing: CGFloat = 45
+
+        let titles = ScoreTitleNode()
+        titles.position = CGPoint(x: (-panelSize.width/2) + 120, y: startY)
+        panel.addChild(titles)
+
         for (i, score) in scores.enumerated() {
             if score.score == latestScore && latestShown == false {
                 latestShown = true
-                fontSize = 38
+                isLatest = true
             } else {
-                fontSize = 30
+                isLatest = false
             }
-            let label = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
-            label.fontSize = fontSize
-            label.fontColor = .black
-            label.horizontalAlignmentMode = .left
+            let label = ScoreNode(score: score, isLatest: isLatest)
 
-            label.text = "Score: \(score.score) in \(score.time.minutes()) mins and \(score.time.seconds()) secs"
+            label.position = CGPoint(x: (-panelSize.width/2) + 140,
+                                     y: startY - CGFloat(i + 1) * spacing)
 
-            label.position = CGPoint(x: -panelSize.width/2 + 70,
-                                     y: startY - CGFloat(i) * spacing)
-
+            label.name = NodeNames.scoreLabel.name
             panel.addChild(label)
         }
     }
@@ -116,8 +124,131 @@ class HighScoresPopup: SKNode {
         let location = touch.location(in: panel)
         let node = panel.atPoint(location)
 
-        if node.name == "closeButton" {
+        if node.name == NodeNames.closeButton.name {
             hide()
         }
+
+        if node.name == NodeNames.resetScores.name {
+            highScoreManager.reset()
+            for label in panel.children {
+                if label.name == NodeNames.scoreLabel.name {
+                    label.removeFromParent()
+                }
+            }
+        }
+    }
+
+    /// A background node that covers the entire screen and greys out the
+    /// currently active game board.
+    private func createBackground() {
+        background = SKSpriteNode(color: UIColor.black.withAlphaComponent(0.55),
+                                  size: CGSize(width: 4000, height: 4000))
+        background.zPosition = 0
+        addChild(background)
+    }
+
+    private func createHighScoresPanel() {
+        panel = SKSpriteNode(imageNamed: "highScores")
+        panel.zPosition = 1
+        panel.setScale(0.01) // start small for animation
+        addChild(panel)
+    }
+
+    private func createCloseButton() {
+        let closeButton = SKSpriteNode(imageNamed: "closeButton")
+        closeButton.name = NodeNames.closeButton.name
+        closeButton.position = CGPoint(x: panelSize.width/2 - 45,
+                                       y: panelSize.height/2 - 55)
+        closeButton.zPosition = 2
+        panel.addChild(closeButton)
+    }
+
+    private func createResetButton() {
+        let reset = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+        reset.text = "Reset high scores"
+        reset.fontSize = 24
+        reset.fontColor = .darkGray
+        reset.name = NodeNames.resetScores.name
+        reset.position = CGPoint(x: 0,
+                                 y: (-panelSize.height / 2) + 50)
+        panel.addChild(reset)
+    }
+}
+
+class ScoreNode: SKNode {
+
+    var scoreLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+    var minuteLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+    var secondLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+
+    init(score: HighScore, isLatest: Bool = false) {
+        super.init()
+
+        if isLatest {
+            let bgNode = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 332, height: 40))
+            bgNode.fillColor = .orange
+            addChild(bgNode)
+        }
+
+        scoreLabel.fontSize = 30
+        scoreLabel.fontColor = .black
+        scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.position = CGPoint(x: 10, y: 10)
+        scoreLabel.text = score.score.formatted(.number.precision(.integerLength(0...4)))
+        addChild(scoreLabel)
+
+        minuteLabel.fontSize = 30
+        minuteLabel.fontColor = .black
+        minuteLabel.horizontalAlignmentMode = .left
+        minuteLabel.position = CGPoint(x: 210, y: 10)
+        minuteLabel.text = score.time.minutes()
+        addChild(minuteLabel)
+
+        secondLabel.fontSize = 30
+        secondLabel.fontColor = .black
+        secondLabel.horizontalAlignmentMode = .left
+        secondLabel.position = CGPoint(x: 290, y: 10)
+        secondLabel.text = score.time.seconds()
+        addChild(secondLabel)
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class ScoreTitleNode: SKNode {
+
+    var scoreLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+    var minuteLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+    var secondLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
+
+    override init() {
+        super.init()
+
+        scoreLabel.fontSize = 32
+        scoreLabel.fontColor = .black
+        scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.position = CGPoint(x: 10, y: 10)
+        scoreLabel.text = "Score"
+        addChild(scoreLabel)
+
+        minuteLabel.fontSize = 32
+        minuteLabel.fontColor = .black
+        minuteLabel.horizontalAlignmentMode = .left
+        minuteLabel.position = CGPoint(x: 220, y: 10)
+        minuteLabel.text = "Mins"
+        addChild(minuteLabel)
+
+        secondLabel.fontSize = 32
+        secondLabel.fontColor = .black
+        secondLabel.horizontalAlignmentMode = .left
+        secondLabel.position = CGPoint(x: 300, y: 10)
+        secondLabel.text = "Secs"
+        addChild(secondLabel)
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
