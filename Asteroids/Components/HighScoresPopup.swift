@@ -40,6 +40,13 @@ class HighScoresPopup: SKNode {
     /// anything  that we place on the panel.
     private let panelSize = CGSize(width: 620, height: 580)
 
+    
+    /// Initialise the high scores window. Note, default anchor point is (0.5, 0.5) so coordinate
+    /// (0, 0) is the center of the screen.
+    /// - Parameters:
+    ///   - scores: The high scores manager with the scores list in it
+    ///   - latestScore: The latest added score
+    ///   - onClose: Called when the node is closed to allow the caller to clean up.
     init(scores: HighScoreManager, latestScore: Int, onClose: @escaping () -> Void) {
         self.onClose = onClose
         self.highScoreManager = scores

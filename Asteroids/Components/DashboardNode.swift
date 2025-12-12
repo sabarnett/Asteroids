@@ -21,7 +21,7 @@ class DashboardNode: SKNode {
         super.init()
 
         let background = SKSpriteNode(imageNamed: "dashboard.png")
-        background.anchorPoint = .zero
+        background.anchorPoint = .zero          // (0, 0) is bottom/left
         background.zPosition = -1
         background.position = CGPoint(x: 0, y: -15)
         addChild(background)
@@ -29,9 +29,6 @@ class DashboardNode: SKNode {
         setupFuelGauge()
         setupTimeLabel()
         setupScoreLabel()
-
-        // Required if we want to accept touchesBegan
-//        self.isUserInteractionEnabled = true
     }
 
     required init?(coder: NSCoder) {
@@ -47,10 +44,6 @@ class DashboardNode: SKNode {
     var timeElapsed: TimeInterval = 0 {
         didSet { timeLabel.text = "\(timeElapsed.stringFormatted())" }
     }
-
-//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-//        print("Item Touched")
-//    }
 
     private func setupFuelGauge() {
         fuelLabel.position = CGPoint(x: 25, y: 6)
