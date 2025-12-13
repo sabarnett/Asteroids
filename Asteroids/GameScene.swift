@@ -310,7 +310,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func createToolbar() {
         toolbar.delegate = self
         toolbar.dataModel = self.dataModel
-        toolbar.position = CGPoint(x: 390, y: 310)
+        toolbar.position = CGPoint(x: 390, y: 328)
         gameNode.addChild(toolbar)
     }
 

@@ -13,6 +13,7 @@ import SpriteKit
 
 class DashboardNode: SKNode {
 
+    let background = SKSpriteNode(imageNamed: "dashboard.png")
     let scoreLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
     let timeLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
     let fuelLabel = SKLabelNode(fontNamed: "AvenirNextCondensed-Bold")
@@ -20,10 +21,9 @@ class DashboardNode: SKNode {
     override init() {
         super.init()
 
-        let background = SKSpriteNode(imageNamed: "dashboard.png")
         background.anchorPoint = .zero          // (0, 0) is bottom/left
         background.zPosition = -1
-        background.position = CGPoint(x: 0, y: -15)
+        background.position = CGPoint(x: 0, y: 0)
         addChild(background)
         
         setupFuelGauge()
@@ -46,29 +46,29 @@ class DashboardNode: SKNode {
     }
 
     private func setupFuelGauge() {
-        fuelLabel.position = CGPoint(x: 25, y: 6)
+        fuelLabel.position = CGPoint(x: 25, y: 21)
         fuelLabel.fontSize = 20.0
         fuelLabel.horizontalAlignmentMode = .left
         fuelLabel.fontColor = .black
-        addChild(fuelLabel)
+        background.addChild(fuelLabel)
         fuelRemaining = 100.0
     }
 
     private func setupTimeLabel() {
-        timeLabel.position = CGPoint(x: 145, y: 6)
+        timeLabel.position = CGPoint(x: 145, y: 21)
         timeLabel.fontSize = 20.0
         timeLabel.horizontalAlignmentMode = .left
         timeLabel.fontColor = .black
-        addChild(timeLabel)
+        background.addChild(timeLabel)
         timeElapsed = 0
     }
 
     private func setupScoreLabel() {
-        scoreLabel.position = CGPoint(x: 305, y: 6)
+        scoreLabel.position = CGPoint(x: 305, y: 21)
         scoreLabel.fontSize = 20.0
         scoreLabel.horizontalAlignmentMode = .left
         scoreLabel.fontColor = .black
-        addChild(scoreLabel)
+        background.addChild(scoreLabel)
         score = 0
     }
 }
