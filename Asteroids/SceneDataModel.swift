@@ -10,7 +10,7 @@
 //
 
 import Combine
-import Foundation
+import SwiftUI
 
 final class SceneDataModel: ObservableObject {
 
@@ -19,14 +19,11 @@ final class SceneDataModel: ObservableObject {
     @Published var gameOver = false
     @Published var gamePaused: Bool = false
     @Published var touchingPlayer = false
-    @Published var playingSound = true
+    @AppStorage("PlayingSound") var playingSound: Bool = true
 
     func resetState() {
         gameOver = false
         gamePaused = false
         touchingPlayer = false
-
-        // Items we do not reset between games...
-//        playingSound = true
     }
 }
