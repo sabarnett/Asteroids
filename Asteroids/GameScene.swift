@@ -363,7 +363,6 @@ extension GameScene: ToolbarDelegate {
 
             if dataModel.playingSound == false {
                 addChild(music)
-                dataModel.playingSound = true
             }
         } else {
             dataModel.gamePaused = true
@@ -373,7 +372,6 @@ extension GameScene: ToolbarDelegate {
 
             if dataModel.playingSound {
                 music.removeFromParent()
-                dataModel.playingSound = false
             }
         }
     }
